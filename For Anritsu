@@ -1,0 +1,70 @@
+#事前に株価データを読み込む必要あり
+#アンリツ株価データを読み込んでxtsへ
+library(quantmod)
+anritsu <- read.csv("6754_2020.csv", header = T)
+anritsu <- as.xts(read.zoo(anritsu))
+
+#anritsuのクラス確認
+class(anritsu)
+
+#tamagawaのデータ確認
+head(anritsu)
+tail(anritsu)
+
+#範囲を限定
+anritsu["2017-01-01::2020"]
+
+
+#ローソク足の描画
+library(quantmod)
+candleChart(anritsu)
+#チャートの描画
+chartSeries(anritsu,subset="last 4 months")
+
+#ボリンジャーバンドを追加
+addBBands(n = 20, sd = 2, ma = "SMA", draw = 'bands', on = -1)
+
+#各指標を追加
+addRSI()
+addMACD()
+allReturns(anritsu)
+addTA(anritsu)　
+
+#収益率を描画
+plot(dailyReturn(Ad(anritsu), type = "arithmetic"))
+#累積
+plot(cumprod(1+dailyReturn(Ad(anritsu), type = "arithmetic")))
+
+#対数収益率
+plot(diff(log(Ad(anritsu))),type="l")
+#累積
+lines(cumsum(dailyReturn(Ad(anritsu),type="log")),col="red")
+
+zoomChart('2020::')
+
+week_anritsu<-to.weekly(anritsu)
+candleChart(week_anritsu)
+month_anritsu<-to.monthly(anritsu)
+candleChart(month_anritsu)
+
+#サマリー
+library(PerformanceAnalytics)
+
+anritsu <- dailyReturn(Ad(anritsu))
+charts.PerformanceSummary(anritsu)
+
+#sony(2013-2020)を読み込みサマリー
+sony <- read.csv("6758_2020.csv", header = T)
+sony <- as.xts(read.zoo(sony))
+
+sony <- dailyReturn(Ad(sony))
+charts.PerformanceSummary(sony)
+
+#コラムを変更してデータをつなぎ合わせる
+colnames(anritsu) <- "anritsu"
+colnames(sony) <- "sony"
+merge(anritsu,sony)
+anritsuVSsony <- merge(anritsu,sony)
+
+#anritsuとsonyを比較
+charts.PerformanceSummary(anritsuVSsony)
